@@ -62,3 +62,44 @@ When state changes, React updates the Virtual DOM first, compares it with the pr
 ```
 const [count, setCount] = useState(0);
 ```
+7. Difference between state and props?
+
+| State       | Props         |
+| ------------- | ------------- |
+| Managed within component  | Passed from parent |
+| Can be changed  | Read-only  |
+| Causes re-render | Causes re-render |
+
+
+8. What are React Hooks?
+
+- Hooks are functions that allow using state and lifecycle features in functional components.
+- Common hooks:
+    - useState
+    - useEffect
+    - useContext
+    - useRef
+    - useMemo
+
+9. Explain `useEffect`
+
+- useEffect lets you run side effects in a React component
+- A side effect is anything that:
+- Examples:
+    - fetching data
+    - setting up timers
+    - subscribing to events
+    - updating the document title
+- After React renders this component, run this code
+
+- Basic syntax
+```
+useEffect(() => {
+  // effect logic here
+}, [dependencies]);
+```
+- First argument → a function (the effect)
+- Second argument → dependency array (controls when it runs)
+
+
+	
