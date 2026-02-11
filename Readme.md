@@ -401,3 +401,96 @@ items.map(item => <li key={item.id}>{item.name}</li>)
     - Use keys properly
     - Code splitting
 
+20. Explain `useMemo` and `React.memo`
+
+- useMemo → memoizes a value
+- React.memo → memoizes a component
+
+#### Part 1: useMemo
+
+- What problem does it solve?
+- It prevents expensive calculations from running on every render.
+
+- Step 1: The problem (slow calculation)
+```
+function App() {
+  const [count, setCount] = React.useState(0);
+  const [text, setText] = React.useState("");
+
+  const expensiveValue = slowFunction(count);
+
+  return (
+    <>
+      <button onClick={() => setCount(count + 1)}>Count</button>
+      <input onChange={e => setText(e.target.value)} />
+      <p>{expensiveValue}</p>
+    </>
+  );
+}
+
+function slowFunction(num) {
+  console.log("Running slow function...");
+  for (let i = 0; i < 1_000_000_000; i++) {}
+  return num * 2;
+}
+```
+
+🚨 Problem:
+
+Typing in input causes a re-render
+
+slowFunction runs again (even though count didn’t change)
+
+- Step 2: Fix with useMemo
+```
+import { useMemo } from "react";
+
+const expensiveValue = useMemo(() => {
+  return slowFunction(count);
+}, [count]);
+
+Full example
+function App() {
+  const [count, setCount] = React.useState(0);
+  const [text, setText] = React.useState("");
+
+  const expensiveValue = React.useMemo(() => {
+    return slowFunction(count);
+  }, [count]);
+
+  return (
+    <>
+      <button onClick={() => setCount(count + 1)}>Count</button>
+      <input onChange={e => setText(e.target.value)} />
+      <p>{expensiveValue}</p>
+    </>
+  );
+}
+```
+
+- What happens now?
+
+- Input changes → re-render
+- useMemo returns cached value
+- slowFunction does not run again
+- count changes → recalculates
+
+- Rules for useMemo
+
+✅ Use when:
+
+- calculation is expensive
+
+- value depends on specific inputs
+
+❌ Don’t use for:
+
+- simple calculations
+
+- everything “just in case”
+
+📌 Overusing useMemo can hurt performance.
+
+- Explain `useCallback` and `React.memo`
+  - [Refer this link for better clarity](https://www.youtube.com/watch?v=zkWIVj5EsuI)
+
