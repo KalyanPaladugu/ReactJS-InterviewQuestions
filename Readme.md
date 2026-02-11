@@ -494,3 +494,6 @@ function App() {
 - Explain `useCallback` and `React.memo`
   - [Refer this link for better clarity](https://www.youtube.com/watch?v=zkWIVj5EsuI)
 
+- Explain `useMemo`
+ - [useMemo] (https://www.youtube.com/watch?v=RIFYIfzarnI)
+
