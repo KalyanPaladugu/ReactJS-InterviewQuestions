@@ -497,3 +497,174 @@ function App() {
 - Explain `useMemo`
  - [useMemo] (https://www.youtube.com/watch?v=RIFYIfzarnI)
 
+- Lazy Loading
+  - Lazy Loading Routes (Code Splitting)
+  - Lazy loading improves performance by loading components only when needed, reducing initial bundle size.
+
+```
+📌 Example using React.lazy and Suspense
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+// Lazy loaded components
+const Dashboard = lazy(() => import("./Dashboard"));
+const Reports = lazy(() => import("./Reports"));
+
+function App() {
+  return (
+    <Router>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/reports" element={<Reports />} />
+        </Routes>
+      </Suspense>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+- Debouncing Search Input
+- Debouncing ensures an API call happens after the user stops typing, preventing excessive requests.
+
+```
+📌 Example Using setTimeout
+import React, { useState, useEffect } from "react";
+
+function SearchComponent() {
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    if (debouncedQuery) {
+      console.log("API Call with:", debouncedQuery);
+      // Call API here
+    }
+  }, [debouncedQuery]);
+
+  return (
+    <input
+      type="text"
+      placeholder="Search..."
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+    />
+  );
+}
+
+export default SearchComponent;
+
+✅ What This Does:
+
+Waits 500ms after user stops typing
+
+Prevents multiple API calls
+
+Reduces server load
+
+Improves performance
+```
+- I implemented input debouncing using useEffect and setTimeout to prevent excessive API calls and improve search performance.
+
+- Here’s a clear example of Debouncing using Lodash in React 👇
+
+✅ 1️⃣ Install Lodash
+npm install lodash
+
+✅ 2️⃣ Example: Debounced Search Input Using Lodash
+
+```
+import React, { useState, useMemo } from "react";
+import { debounce } from "lodash";
+
+function SearchComponent() {
+  const [query, setQuery] = useState("");
+
+  // Create debounced function
+  const debouncedSearch = useMemo(() => 
+    debounce((value) => {
+      console.log("API Call with:", value);
+      // Call your API here
+    }, 500), []
+  );
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    debouncedSearch(value);
+  };
+
+  return (
+    <input
+      type="text"
+      value={query}
+      onChange={handleChange}
+      placeholder="Search..."
+    />
+  );
+}
+
+export default SearchComponent;
+```
+- Why use useMemo?
+  - Prevents recreating the debounced function on every render
+  - Improves performance
+  - Ensures stable function reference
+
+  
+  1️⃣ Install Lodash (if not installed)
+npm install lodash
+
+✅ 2️⃣ Example: Throttling Scroll Event
+
+This example ensures the function runs at most once every 500ms, even if the user scrolls continuously.
+```
+import React, { useEffect, useMemo } from "react";
+import { throttle } from "lodash";
+
+function ScrollTracker() {
+
+  const handleScroll = useMemo(
+    () =>
+      throttle(() => {
+        console.log("Scroll position:", window.scrollY);
+      }, 500),
+    []
+  );
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      handleScroll.cancel(); // cleanup
+    };
+  }, [handleScroll]);
+
+  return <div style={{ height: "2000px" }}>Scroll Down</div>;
+}
+
+export default ScrollTracker;
+```
+✅ What This Does
+- If user scrolls continuously → function runs once every 500ms
+- Prevents performance issues
+- Useful for scroll tracking, resize events, infinite scroll
+
+🎯 Interview Explanation (Short & Strong)
+
+I used Lodash throttle to control the execution frequency of scroll events, ensuring the function runs at fixed intervals instead of triggering excessively. This improved performance and prevented unnecessary re-renders during continuous user interactions.
+
+🔥 Difference Reminder
+- Debounce → Wait until user stops
+- Throttle → Execute at fixed intervals
