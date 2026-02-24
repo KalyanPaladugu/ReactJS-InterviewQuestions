@@ -497,3 +497,5 @@ function App() {
 - Explain `useMemo`
  - [useMemo] (https://www.youtube.com/watch?v=RIFYIfzarnI)
 
+- [Role based access routing](https://www.youtube.com/watch?v=SKF--l-FGNM)
+
