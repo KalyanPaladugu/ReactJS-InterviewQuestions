@@ -668,3 +668,25 @@ I used Lodash throttle to control the execution frequency of scroll events, ensu
 🔥 Difference Reminder
 - Debounce → Wait until user stops
 - Throttle → Execute at fixed intervals
+
+- Find last value for count
+```
+import React,{useState,useEffect,useRef} from 'react'
+
+export default function App() {
+ const [count,setCount] = useState(0);
+ const lastValue= useRef(0);
+
+ useEffect(()=>{
+    lastValue.current=count
+ },[count])
+const handleIncrement= ()=>{
+  setCount(count+5)
+}
+  return (<>
+        <h1>{count}</h1>
+        <h2>{lastValue.current}</h2>
+        <button onClick={handleIncrement}>increment</button>
+  </>)
+}
+```
