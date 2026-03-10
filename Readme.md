@@ -692,3 +692,64 @@ const handleIncrement= ()=>{
 ```
 - [Role based access routing](https://www.youtube.com/watch?v=SKF--l-FGNM)
 
+- useReducer
+  - While useState is great for simple values, useReducer is the "big guns" for managing complex state—especially when the next state depends on the previous one or involves multiple sub-values.
+  
+```
+import React, { useReducer } from 'react';
+
+// 1. Define the initial state
+const initialState = { items: [], total: 0 };
+
+// 2. Define the reducer function
+function cartReducer(state, action) {
+  switch (action.type) {
+    case 'ADD_ITEM':
+      return {
+        ...state,
+        items: [...state.items, action.payload],
+        total: state.total + action.payload.price
+      };
+    case 'REMOVE_ITEM':
+      const filteredItems = state.items.filter(item => item.id !== action.payload.id);
+      return {
+        ...state,
+        items: filteredItems,
+        total: state.total - action.payload.price
+      };
+    case 'CLEAR_CART':
+      return initialState;
+    default:
+      return state;
+  }
+}
+
+export default function ShoppingCart() {
+  // 3. Initialize useReducer
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  const addItem = () => {
+    const newItem = { id: Date.now(), name: 'Coffee', price: 5 };
+    dispatch({ type: 'ADD_ITEM', payload: newItem });
+  };
+
+  return (
+    <div>
+      <h2>Cart Total: ${state.total}</h2>
+      <button onClick={addItem}>Add Coffee ($5)</button>
+      <button onClick={() => dispatch({ type: 'CLEAR_CART' })}>Clear</button>
+
+      <ul>
+        {state.items.map(item => (
+          <li key={item.id}>
+            {item.name} - ${item.price} 
+            <button onClick={() => dispatch({ type: 'REMOVE_ITEM', payload: item })}>
+              x
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
