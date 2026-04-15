@@ -528,7 +528,7 @@ export default App;
 
 - Debouncing Search Input
 - Debouncing ensures an API call happens after the user stops typing, preventing excessive requests.
-
+- Debounce is a technique that delays executing a function until after a user has stopped triggering it for a specified time.
 ```
 📌 Example Using setTimeout
 import React, { useState, useEffect } from "react";
@@ -694,7 +694,7 @@ const handleIncrement= ()=>{
 
 - useReducer
   - While useState is great for simple values, useReducer is the "big guns" for managing complex state—especially when the next state depends on the previous one or involves multiple sub-values.
-  
+
 ```
 import React, { useReducer } from 'react';
 
@@ -752,4 +752,322 @@ export default function ShoppingCart() {
     </div>
   );
 }
+```
+- display state based on country
+
+```
+import React, { useState } from "react";
+
+const locationData = [
+  {
+    country: "USA",
+    states: ["California", "Texas", "Florida", "New York"]
+  },
+  {
+    country: "India",
+    states: ["Maharashtra", "Karnataka", "Tamil Nadu", "Delhi"]
+  },
+  {
+    country: "Canada",
+    states: ["Ontario", "Quebec", "Alberta", "British Columbia"]
+  }
+];
+
+export default function CountryStateSelector() {
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [availableStates, setAvailableStates] = useState([]);
+
+  const handleCountryChange = (e) => {
+    const countryName = e.target.value;
+    setSelectedCountry(countryName);
+
+    // Find the object that matches the selected country
+    const countryObj = locationData.find((c) => c.country === countryName);
+    
+    // Update the states list (or clear it if no country is selected)
+    setAvailableStates(countryObj ? countryObj.states : []);
+  };
+
+  return (
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h3>Select Location</h3>
+
+      {/* Country Dropdown */}
+      <select value={selectedCountry} onChange={handleCountryChange}>
+        <option value="">-- Select Country --</option>
+        {locationData.map((item) => (
+          <option key={item.country} value={item.country}>
+            {item.country}
+          </option>
+        ))}
+      </select>
+
+      <br /><br />
+
+      {/* State Dropdown */}
+      <select disabled={!selectedCountry}>
+        <option value="">-- Select State --</option>
+        {availableStates.map((state) => (
+          <option key={state} value={state}>
+            {state}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+```
+- How to load all api's info in the UI with out pagination?
+-  we can achieve it by virtual-scroll(js code) or react-virtualized library
+- react-virtualized library usage
+```
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { List, AutoSizer } from 'react-virtualized';
+import 'react-virtualized/styles.css'; // Essential for default styling
+
+const Demo = () => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    // Fetching 100 items from JSONPlaceholder
+    axios.get('https://jsonplaceholder.typicode.com/posts')
+      .then(res => setData(res.data));
+  }, []);
+
+  // This function renders a single row
+  const rowRenderer = ({ index, key, style }) => {
+    const item = data[index];
+    
+    return (
+      <div key={key} style={{
+        ...style,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 10px',
+        borderBottom: '1px solid #ddd',
+        backgroundColor: index % 2 === 0 ? '#fff' : '#f9f9f9'
+      }}>
+        <div>
+          <strong>{index + 1}.</strong> {item.title}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ height: '80vh', width: '100%', padding: '20px' }}>
+      <h3>React Virtualized List (100 Items)</h3>
+      
+      {/* AutoSizer calculates the parent's width/height automatically */}
+      <AutoSizer>
+        {({ height, width }) => (
+          <List
+            width={width}
+            height={height}
+            rowCount={data.length}
+            rowHeight={60} // Fixed height of each row in pixels
+            rowRenderer={rowRenderer}
+            overscanRowCount={10} // Pre-renders 10 rows for smoother scrolling
+          />
+        )}
+      </AutoSizer>
+    </div>
+  );
+};
+
+export default Demo;
+```
+- virtual scroll also will help to load limited data in the ui
+```
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+
+const VirtualScroll = ({ items, itemHeight, containerHeight }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef(null);
+  const frameId = useRef(null);
+
+  // 1. Optimized Scroll Handler
+  const onScroll = useCallback((e) => {
+    // Cancel the previous frame to prevent "stacking" updates
+    if (frameId.current) {
+      cancelAnimationFrame(frameId.current);
+    }
+
+    // Schedule the state update for the next browser repaint
+    frameId.current = requestAnimationFrame(() => {
+      setScrollTop(e.target.scrollTop);
+    });
+  }, []);
+
+  // 2. Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (frameId.current) cancelAnimationFrame(frameId.current);
+    };
+  }, []);
+
+  // 3. Logic for visible range
+  const { startWithBuffer, endWithBuffer, visibleItems } = useMemo(() => {
+    const startIndex = Math.floor(scrollTop / itemHeight);
+    const endIndex = Math.min(
+      items.length - 1,
+      Math.floor((scrollTop + containerHeight) / itemHeight)
+    );
+
+    const buffer = 5;
+    const startWithBuffer = Math.max(0, startIndex - buffer);
+    const endWithBuffer = Math.min(items.length - 1, endIndex + buffer);
+
+    const sliced = items.slice(startWithBuffer, endWithBuffer + 1).map((item, i) => ({
+      ...item,
+      absoluteIndex: startWithBuffer + i,
+    }));
+
+    return { startWithBuffer, endWithBuffer, visibleItems: sliced };
+  }, [items, scrollTop, itemHeight, containerHeight]);
+
+  return (
+    <div
+      ref={containerRef}
+      onScroll={onScroll}
+      style={{
+        height: containerHeight,
+        overflowY: 'auto',
+        position: 'relative',
+        border: '1px solid #ccc',
+        willChange: 'transform', // Optimization hint for the browser
+      }}
+    >
+      {/* 4. The "Total Height" div to force scrollbar appearance */}
+      <div 
+        style={{ 
+          height: items.length * itemHeight, 
+          width: '100%',
+          pointerEvents: 'none' // Prevent interaction with the phantom div
+        }} 
+      />
+
+      {/* 5. The "View Window" that translates with the scroll */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          // Use translateY for GPU-accelerated performance
+          transform: `translate3d(0, ${startWithBuffer * itemHeight}px, 0)`,
+        }}
+      >
+        {visibleItems.map((item) => (
+          <div
+            key={item.id || item.absoluteIndex} // Use unique ID if available
+            style={{
+              height: itemHeight,
+              padding: '10px',
+              borderBottom: '1px solid #eee',
+              boxSizing: 'border-box',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <strong>{item.absoluteIndex + 1}.</strong>&nbsp;{item.title}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default VirtualScroll;
+```
+- How to load high-priority child components first, and render the remaining components later?
+  - In high-performance React applications, this pattern is known as `Progressive Rendering` or `Priority-Based Hydration`. The goal is to ensure the user sees the "Main" or "Critical" content immediately, while the secondary, non-critical components (like footers, sidebars, or complex widgets) load in the background.
+
+1. Using `React.Suspense` and `lazy` (Best for Bundles)
+ - This is the standard approach for splitting your code. You can prioritize the "Main" component by importing it normally and lazy-loading the others.
+ ```
+ import React, { Suspense, lazy } from 'react';
+import CriticalComponent from './CriticalComponent'; // Priority 1: Loaded immediately
+
+// Priority 2: Loaded later as a separate bundle
+const DelayedComponent = lazy(() => import('./DelayedComponent'));
+
+const Parent = () => {
+  return (
+    <div>
+      {/* Priority child renders instantly */}
+      <CriticalComponent />
+
+      {/* Remaining children load in background */}
+      <Suspense fallback={<div>Loading secondary content...</div>}>
+        <DelayedComponent />
+      </Suspense>
+    </div>
+  );
+};
+```
+2. Using `useEffect` to Defer Rendering (Best for Execution)
+- If the components are already in the bundle but are computationally heavy, you can defer their mounting using a simple state-based delay. This ensures the main thread finishes rendering the priority child before starting the others.
+```
+import React, { useState, useEffect } from 'react';
+
+const Parent = () => {
+  const [shouldLoadSecondary, setShouldLoadSecondary] = useState(false);
+
+  useEffect(() => {
+    // Wait until the initial render of the Critical component is finished
+    const timeout = setTimeout(() => {
+      setShouldLoadSecondary(true);
+    }, 0); // Even a 0ms delay pushes it to the end of the event loop
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return (
+    <div>
+      <CriticalComponent />
+      
+      {shouldLoadSecondary ? (
+        <HeavyChildComponent />
+      ) : (
+        <Placeholder />
+      )}
+    </div>
+  );
+};
+```
+3. Using `requestIdleCallback` (Best for UX Scale)
+- For a "Proper" enterprise implementation, you should use the browser's requestIdleCallback. This API waits until the browser is literally idle (done with priority tasks) before rendering the low-priority children.
+```
+import React, { useState, useEffect } from 'react';
+
+const PriorityLoader = () => {
+  const [lowPriorityItems, setLowPriorityItems] = useState(false);
+
+  useEffect(() => {
+    // requestIdleCallback is a global Web API like requestAnimationFrame
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        setLowPriorityItems(true);
+      });
+    } else {
+      // Fallback for Safari/browsers that don't support it yet
+      setTimeout(() => setLowPriorityItems(true), 1000);
+    }
+  }, []);
+
+  return (
+    <div>
+      <HighPriorityHeader />
+      
+      {lowPriorityItems && (
+        <>
+          <HeavyDashboardWidgets />
+          <FooterLinks />
+        </>
+      )}
+    </div>
+  );
+};
 ```
