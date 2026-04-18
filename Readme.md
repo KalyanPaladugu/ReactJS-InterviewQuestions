@@ -405,7 +405,9 @@ items.map(item => <li key={item.id}>{item.name}</li>)
 
 - useMemo → memoizes a value
 - React.memo → memoizes a component
-
+- [React.memo](https://www.youtube.com/watch?v=QoJplQlMP2Y&t=897s)
+- [useMemo](https://www.youtube.com/watch?v=IlzjNhtUqOs)
+- [useCallBack](https://www.youtube.com/watch?v=apjSe464KWk)
 #### Part 1: useMemo
 
 - What problem does it solve?

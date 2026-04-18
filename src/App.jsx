@@ -15,8 +15,9 @@ import SearchItems from './components/SearchItems';
 // import Input from './components/Input';
 // import Display from './components/Display'
 // import { useMemo } from "react";
-
-
+import ProductApp from './components/ProductApp';
+import UseMemoExample from './components/UsemMemoExample';
+import UseCallbackExample from './components/UseCallbackExample';
 
 function App() {
   
@@ -41,7 +42,10 @@ function App() {
 //     </>
     <div>
       {/* <SearchItemsFromApi /> */}
-      <SearchItems />
+      {/* <SearchItems /> */}
+      {/* <ProductApp /> */}
+      {/* <UseMemoExample /> */}
+      <UseCallbackExample />
     </div>
   )
 }
