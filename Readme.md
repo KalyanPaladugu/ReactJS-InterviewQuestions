@@ -1073,3 +1073,181 @@ const PriorityLoader = () => {
   );
 };
 ```
+- controlled vs uncontrolled components
+ - In a Controlled component, React state manages the form data.
+ - In an Uncontrolled component, the DOM itself holds the form data, and you pull it out when you need it using a React ref.
+
+1. Controlled Component Example (React State)
+ - In a controlled component, every single keystroke triggers a state update. The input element's value attribute is locked directly to a React useState variable.
+ ```
+ import React, { useState } from 'react';
+
+export default function ControlledForm() {
+  const [username, setUsername] = useState('');
+
+  const handleChange = (event) => {
+    // Sync the input text with React state on every single keystroke
+    setUsername(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log("Submitted Username:", username); 
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Username (Controlled):
+        <input 
+          type="text" 
+          value={username} 
+          onChange={handleChange} 
+        />
+      </label>
+      <button type="submit">Submit</button>
+      
+      {/* Live feedback is easy because React constantly knows the value */}
+      <p>Current input text length: {username.length}</p>
+    </form>
+  );
+}
+```
+
+2. Uncontrolled Component Example (DOM Refs)
+ - In an uncontrolled component, you don't track the typing changes. The input manages its own internal state in the browser DOM. When you finally submit the form, you reach into the DOM using a useRef pointer to grab whatever text happens to be sitting there.
+
+ ```
+ import React, { useRef } from 'react';
+
+export default function UncontrolledForm() {
+  // Create a pointer reference to hold the DOM element
+  const inputRef = useRef(null);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    // Grab the value directly from the DOM node when needed
+    console.log("Submitted Username:", inputRef.current.value);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Username (Uncontrolled):
+        <input 
+          type="text" 
+          ref={inputRef} // Attaches the DOM node to our ref pointer
+        />
+      </label>
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+- Promise vs async/await
+-  What's the difference and when would you prefer one over the other?
+  - async/await is syntactic sugar over Promises, more readable
+  - Promise.all for parallel execution, async/await for sequential
+  - Use async/await with try/catch for better error handling
+  - Use Promise.allSettled when you need all results regardless of failures
+
+- What does "scalable web applications" mean in your experience?
+
+  - Handle increasing user traffic without performance degradation
+  - Code splitting and lazy loading for faster initial load
+  - CDN integration for static assets
+  - Service workers for offline capability
+  - Micro-frontends for team scalability
+  - Caching strategies (SWR, React Query)
+
+- Where exactly did you use virtualization in your projects?
+1. Data Tables & Grids (Most Common)
+Scenario: Enterprise dashboards with thousands of records
+```
+// Real example: Customer management system with 10,000+ customers
+// Problem: Initial render took 8 seconds, scrolling was laggy
+// Solution: Implemented react-window virtualization
+// Result: Render time dropped to 200ms, smooth 60fps scrolling
+
+import { FixedSizeList } from 'react-window';
+
+const CustomerTable = ({ customers }) => (
+  <FixedSizeList
+    height={600}
+    itemCount={customers.length} // 10,000+ items
+    itemSize={50}
+    width="100%"
+  >
+    {({ index, style }) => (
+      <CustomerRow customer={customers[index]} style={style} />
+    )}
+  </FixedSizeList>
+);
+```
+2. Chat/Messaging Applications
+Scenario: Chat history with thousands of messages
+```
+// Real example: Customer support chat system
+// Problem: Loading 50,000 message history crashed the browser
+// Solution: Virtualized message list with infinite scroll
+// Result: Only 30 messages rendered at a time, memory usage reduced 95%
+
+import React from 'react';
+import { AutoSizer, VariableList, ListRowProps } from 'react-virtualized';
+import './ChatWindow.css';
+
+interface Message {
+  id: string;
+  text: string;
+  isLong: boolean;
+  sender: string;
+  timestamp: Date;
+}
+
+interface ChatWindowProps {
+  messages: Message[];
+}
+
+const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
+  const rowRenderer = ({ index, key, style }: ListRowProps) => {
+    const message = messages[index];
+    return (
+      <MessageBubble key={key} message={message} style={style} />
+    );
+  };
+
+  return (
+    <div className="chat-window">
+      <AutoSizer>
+        {({ height, width }) => (
+          <VariableList
+            height={height}
+            width={width}
+            rowCount={messages.length}
+            rowHeight={index => messages[index]?.isLong ? 200 : 40}
+            rowRenderer={rowRenderer}
+            overscanRowCount={10}
+            scrollToIndex={messages.length - 1}
+            scrollToAlignment="end"
+          />
+        )}
+      </AutoSizer>
+    </div>
+  );
+};
+
+// Message Bubble Component
+const MessageBubble: React.FC<{ message: Message; style: React.CSSProperties }> = 
+  ({ message, style }) => {
+    return (
+      <div style={style} className={`message-bubble ${message.sender}`}>
+        <div className="message-text">{message.text}</div>
+        <div className="message-time">
+          {message.timestamp.toLocaleTimeString()}
+        </div>
+      </div>
+    );
+  };
+
+export default ChatWindow;
+```
