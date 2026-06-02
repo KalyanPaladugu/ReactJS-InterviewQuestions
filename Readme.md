@@ -1251,3 +1251,4 @@ const MessageBubble: React.FC<{ message: Message; style: React.CSSProperties }> 
 
 export default ChatWindow;
 ```
+- ![ExpressJS Folder Structure](public/express-folderstructure.jpg)
