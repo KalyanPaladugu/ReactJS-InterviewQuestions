@@ -413,61 +413,45 @@ items.map(item => <li key={item.id}>{item.name}</li>)
 - What problem does it solve?
 - It prevents expensive calculations from running on every render.
 
-- Step 1: The problem (slow calculation)
+- Step 1: The problem (expensive calculation)
 ```
+import React, { useState,useMemo } from 'react';
+
 function App() {
-  const [count, setCount] = React.useState(0);
-  const [text, setText] = React.useState("");
+  const [count, setCount] = useState(5);
+  const [darkMode, setDarkMode] = useState(false);
 
-  const expensiveValue = slowFunction(count);
+  // 1. A simulated expensive mathematical operation
+const computedValue =useMemo(() =>{
+  const expensiveCalculation = (num) => {
+    console.log("🔥 Running heavy calculation loop...");
+    let result = num;
+    for (let i = 0; i < 1000000000; i++) {
+      // Wasting CPU cycles intentionally to simulate a laggy process
+    }
+    return result * 2;
+  };
 
+  // 2. This runs on EVERY SINGLE RENDER cycle
+   return expensiveCalculation(count);
+
+},[count])
   return (
-    <>
-      <button onClick={() => setCount(count + 1)}>Count</button>
-      <input onChange={e => setText(e.target.value)} />
-      <p>{expensiveValue}</p>
-    </>
+    <div style={{ background: darkMode ? '#333' : '#fff', color: darkMode ? '#fff' : '#000', padding: '20px' }}>
+      <h1>Value: {computedValue}</h1>
+      <br />
+      {/* Changing count runs the calculation (Expected) */}
+      <button onClick={() => setCount(count + 1)}>Increment Count</button>
+      <br />
+      {/* CRASH/LAG RISK: Changing the theme also runs the calculation! */}
+      <button onClick={() => setDarkMode(!darkMode)}>
+        Toggle Theme (Current: {darkMode ? "Dark" : "Light"})
+      </button>
+    </div>
   );
 }
 
-function slowFunction(num) {
-  console.log("Running slow function...");
-  for (let i = 0; i < 1_000_000_000; i++) {}
-  return num * 2;
-}
-```
-
-🚨 Problem:
-
-Typing in input causes a re-render
-
-slowFunction runs again (even though count didn’t change)
-
-- Step 2: Fix with useMemo
-```
-import { useMemo } from "react";
-
-const expensiveValue = useMemo(() => {
-  return slowFunction(count);
-}, [count]);
-
-Full example
-function App() {
-  const [count, setCount] = React.useState(0);
-  const [text, setText] = React.useState("");
-
-  const expensiveValue = React.useMemo(() => {
-    return slowFunction(count);
-  }, [count]);
-
-  return (
-    <>
-      <button onClick={() => setCount(count + 1)}>Count</button>
-      <input onChange={e => setText(e.target.value)} />
-      <p>{expensiveValue}</p>
-    </>
-  );
-}
+export default App;
 ```
 
 - What happens now?
