@@ -483,6 +483,54 @@ export default App;
 - Explain `useMemo`
  - [useMemo] (https://www.youtube.com/watch?v=RIFYIfzarnI)
 
+- `useCallback` example
+
+```
+import React, { useState,useCallback } from 'react';
+
+// An optimized child component wrapped in React.memo
+const Button = React.memo(({ handleClick, children }) => {
+  console.log(`🔥 Child ${children} component re-rendered!`);
+  return <button onClick={handleClick}>{children}</button>;
+});
+
+function App() {
+  const [count, setCount] = useState(0);
+  const [text, setText] = useState("");
+
+  // // This function is recreated on EVERY SINGLE RENDER
+  // const increment = () => {
+  //   setCount((prevCount) => prevCount + 1);
+  // };
+
+  // 🔥 THE FIX: Memoize the function definition
+  // We use the functional state updater form (prevCount => prevCount + 1)
+  // so that this function doesn't need 'count' in its dependency array.
+  const increment = useCallback(() => {
+    setCount((prevCount) => prevCount + 1);
+  }, []); // Empty dependency array means this function reference never changes!
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Count: {count}</h1>
+      
+      {/* Typing here recreates 'increment', causing the button to re-render! */}
+      <input 
+        type="text" 
+        value={text} 
+        onChange={(e) => setText(e.target.value)} 
+        placeholder="Type here..." 
+      />
+      
+      <br /><br />
+      <Button handleClick={increment}>Increment Count</Button>
+    </div>
+  );
+}
+
+export default App;
+```
+
 - Lazy Loading
   - Lazy Loading Routes (Code Splitting)
   - Lazy loading improves performance by loading components only when needed, reducing initial bundle size.
