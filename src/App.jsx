@@ -43,9 +43,9 @@ function App() {
     <div>
       {/* <SearchItemsFromApi /> */}
       {/* <SearchItems /> */}
-      {/* <ProductApp /> */}
+      <ProductApp />
       {/* <UseMemoExample /> */}
-      <UseCallbackExample />
+      {/* <UseCallbackExample /> */}
     </div>
   )
 }

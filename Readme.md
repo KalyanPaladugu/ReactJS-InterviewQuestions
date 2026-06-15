@@ -1284,3 +1284,322 @@ const MessageBubble: React.FC<{ message: Message; style: React.CSSProperties }> 
 export default ChatWindow;
 ```
 - ![ExpressJS Folder Structure](public/express-folderstructure.jpg)
+
+#### `useParams`
+- URL parameters (often called path params) are part of the actual URL path. They act as placeholders in your route definitions.
+- How it looks in code (React Router Example) 
+  - First, you define the route with a colon (:) to mark the dynamic part:
+```
+<Route path="/user/:userId" element={<UserProfile />} />
+```
+##### Example:
+
+1. The Main Router Setup (`App.jsx`)
+- This component manages your routes. It maps the root URL (`/`) to your list and the dynamic path (`/product/:id`) to your separate detail view.
+```
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ProductList from './ProductList';
+import ProductDetail from './ProductDetail';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+        <h1>My E-Commerce App</h1>
+        <hr />
+        
+        <Routes>
+          {/* Main Page showing list of products */}
+          <Route path="/" element={<ProductList />} />
+          
+          {/* Separate dynamic route that receives the ID parameter */}
+          <Route path="/product/:productId" element={<ProductDetail />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+```
+
+2. The Selection Component (`ProductList.jsx`)
+- Instead of updating local state inside the same file, we now use the React Router `Link` component (or the `useNavigate` hook) to push the user to a completely separate URL.
+
+```
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const ProductList = () => {
+  // Mock list of products. Selecting any of these will trigger navigation.
+  const products = [
+    { id: 1, name: 'Wireless Headphones' },
+    { id: 2, name: 'Mechanical Keyboard' },
+    { id: 3, name: 'Gaming Mouse' }
+  ];
+
+  return (
+    <div>
+      <h2>Available Products</h2>
+      <ul style={{ listStyleType: 'none', padding: 0 }}>
+        {products.map((product) => (
+          <li key={product.id} style={{ margin: '10px 0' }}>
+            {/* Navigates to a brand new route matching our dynamic URL structure */}
+            <Link 
+              to={`/product/${product.id}`} 
+              style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }}
+            >
+              View Details for {product.name} (ID: {product.id}) →
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default ProductList;
+```
+3. The Isolated Detail Component (`ProductDetail.jsx`)
+- This component is completely blank until it is mounted by the Router. It uses `useParams()` to pull the productId out of the URL bar, and then cleanly executes its own fetch request isolated from the list view.
+
+```
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+
+// Replacing sample user endpoint with a product endpoint simulation
+const API_BASE_URL = 'https://dummyjson.com/products';
+
+const ProductDetail = () => {
+  // 1. Extract the productId variable directly from the browser URL parameter
+  const { productId } = useParams();
+  
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProductData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/${productId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} - Could not retrieve product data.`);
+        }
+        
+        const jsonResult = await response.json();
+        setProduct(jsonResult);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (productId) {
+      fetchProductData();
+    }
+  }, [productId]); // Triggers when the component mounts with the URL's specific ID
+
+  // UI State feedback
+  if (loading) return <h3>🔄 Fetching isolated product details from API...</h3>;
+  if (error) return <div style={{ color: 'red' }}>⚠️ {error}</div>;
+  if (!product) return <p>No product found.</p>;
+
+  return (
+    <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px', maxWidth: '500px' }}>
+      {/* Back navigation button */}
+      <Link to="/" style={{ display: 'inline-block', marginBottom: '15px', color: '#555' }}>
+        ← Back to Product Selection
+      </Link>
+
+      <h2>{product.title}</h2>
+      <p style={{ color: '#666', fontStyle: 'italic' }}>Category: {product.category}</p>
+      <hr />
+      
+      <p><strong>Description:</strong> {product.description}</p>
+      <p><strong>Price:</strong> ${product.price}</p>
+      <p><strong>Rating:</strong> {product.rating} / 5</p>
+      <p><strong>Stock Status:</strong> {product.stock > 0 ? 'In Stock' : 'Out of Stock'}</p>
+    </div>
+  );
+};
+
+export default ProductDetail;
+```
+#### searchparams/querystring `useSearchParams`
+
+- Query parameters (or search params) are extensions appended to the end of a URL. They don't change the core route structure; instead, they pass extra instructions or state to the page.
+
+- How it looks in code (React Router Example)
+- If a user navigates to `/shop?category=books&page=2`, you use `useSearchParams` to read those values:
+
+```
+import { useSearchParams } from 'react-router-dom';
+
+function Shop() {
+  const [searchParams] = useSearchParams();
+  
+  const category = searchParams.get('category'); // "books"
+  const page = searchParams.get('page'); // "2"
+
+  return <div>Showing {category} on page {page}</div>;
+}
+```
+##### Note: In vanilla JavaScript without a framework, you can grab these using new URLSearchParams(window.location.search).
+- Best Used For:
+  - Filtering data (e.g., ?color=blue&size=M).
+  - Sorting data (e.g., ?sort=price_low_to_high).
+  - Pagination (e.g., ?page=3).
+  - Tracking or UTM codes (e.g., ?utm_source=newsletter).
+
+##### Example
+
+1. The Main Router Setup (`App.jsx`)
+- Notice how the route is now a clean, static path (`/product`). It doesn’t need a special `:productId` placeholder anymore, because search parameters are read dynamically from whatever follows the ? in the URL.
+
+```
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ProductSearchList from './ProductSearchList';
+import ProductQueryDetail from './ProductQueryDetail';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+        <h1>Query String API Fetch Example</h1>
+        <hr />
+        
+        <Routes>
+          <Route path="/" element={<ProductSearchList />} />
+          {/* Static route structure. The query string handles the rest */}
+          <Route path="/product" element={<ProductQueryDetail />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+```
+2. The Selection Component (`ProductSearchList.jsx`)
+- When constructing your `Link` elements, you append the `?id=VALUE` syntax directly to the end of your target pathname.
+
+```
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const ProductSearchList = () => {
+  const items = [
+    { id: 4, name: 'Sleek Laptop' },
+    { id: 5, name: '4K Monitor' },
+    { id: 6, name: 'Ergonomic Chair' }
+  ];
+
+  return (
+    <div>
+      <h2>Select an Item (Query String Method)</h2>
+      <ul style={{ listStyleType: 'none', padding: 0 }}>
+        {items.map((item) => (
+          <li key={item.id} style={{ margin: '10px 0' }}>
+            {/* Directing to /product?id=number */}
+            <Link 
+              to={`/product?id=${item.id}`} 
+              style={{ textDecoration: 'none', color: '#28a745', fontWeight: 'bold' }}
+            >
+              Inspect {item.name} (?id={item.id}) →
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default ProductSearchList;
+```
+3. The Detail Component via Query Strings (`ProductQueryDetail.jsx`)
+- Here, we use `useSearchParams()`. It returns an array containing a searchParams object. You use its `.get('key')` method to extract the specific parameter you want out of the URL string.
+
+```
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+
+const API_BASE_URL = 'https://dummyjson.com/products';
+
+const ProductQueryDetail = () => {
+  // 1. Initialize searchParams hook
+  const [searchParams] = useSearchParams();
+  
+  // 2. Safely extract the 'id' parameter value from "?id=X"
+  const itemId = searchParams.get('id');
+
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // If someone accidentally browsed to /product with no query string, stop.
+    if (!itemId) return;
+
+    const fetchQueryData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/${itemId}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}: Failed to grab query item.`);
+        }
+        
+        const jsonResult = await response.json();
+        setItem(jsonResult);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQueryData();
+  }, [itemId]); // Fires whenever the '?id=' portion of the URL updates
+
+  // UI Feedback States
+  if (!itemId) return <p style={{ color: 'orange' }}>⚠️ No ID was specified in the URL query string.</p>;
+  if (loading) return <h3>🔄 Fetching data parsing URL search parameters...</h3>;
+  if (error) return <div style={{ color: 'red' }}>⚠️ Error: {error}</div>;
+  if (!item) return <p>Data not found.</p>;
+
+  return (
+    <div style={{ border: '2px dashed #28a745', padding: '20px', borderRadius: '8px', maxWidth: '500px' }}>
+      <Link to="/" style={{ display: 'inline-block', marginBottom: '15px', color: '#555' }}>
+        ← Back to Search List
+      </Link>
+
+      <div style={{ background: '#f4f4f4', padding: '5px 10px', fontSize: '12px', borderRadius: '4px' }}>
+        <strong>Current Parsed URL State:</strong> ?id={itemId}
+      </div>
+
+      <h2>{item.title}</h2>
+      <p><strong>Brand:</strong> {item.brand || 'Generic'}</p>
+      <p><strong>Price:</strong> ${item.price}</p>
+      <p><strong>Description:</strong> {item.description}</p>
+    </div>
+  );
+};
+
+export default ProductQueryDetail;
+```
+
+### URL Parameters vs. Query Strings
+
+| Pattern | URL Structure | Best Used For... | Hook Used |
+| :--- | :--- | :--- | :--- |
+| **URL Params** | `/product/2` | Core entity views, essential structural identifiers, deep linking. | `useParams()` |
+| **Search/Query Params** | `/product?id=2` | Optional filters, sorting preferences, search tracking, pagination (`?page=3&sort=desc`). | `useSearchParams()` |
