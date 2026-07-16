@@ -1,7 +1,7 @@
 import React,{ useState } from 'react'
 import SearchItemsFromApi from './components/SearchItemsFromApi';
 import SearchItems from './components/SearchItems';
-
+import StarRating from './components/StarRating';
 
 // import { BrowserRouter as Router,Routes,Route } from 'react-router-dom'
 // import LoginPage from './components/LoginPage'
@@ -41,9 +41,10 @@ function App() {
 //      <Display name={name} />
 //     </>
     <div>
+      <StarRating />
       {/* <SearchItemsFromApi /> */}
       {/* <SearchItems /> */}
-      <ProductApp />
+      {/* <ProductApp /> */}
       {/* <UseMemoExample /> */}
       {/* <UseCallbackExample /> */}
     </div>
