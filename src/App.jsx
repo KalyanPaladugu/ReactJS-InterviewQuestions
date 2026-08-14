@@ -12,16 +12,16 @@ import StarRating from './components/StarRating';
 // import ProtectedRoute from './context/ProtectedRoute'
 // import CountryStateSelector from './components/CountryStateSelector'
 // import Test from './components/Test';
-// import Input from './components/Input';
-// import Display from './components/Display'
+import Input from './components/Input';
+import Display from './components/Display'
 // import { useMemo } from "react";
 import ProductApp from './components/ProductApp';
 import UseMemoExample from './components/UsemMemoExample';
 import UseCallbackExample from './components/UseCallbackExample';
-
+import CountryState from './components/CountryState';
 function App() {
   
-// const [name, setName] = useState("");
+const [name, setName] = useState("");
   return (
 //     <>
 // {/* <Router>
@@ -41,12 +41,13 @@ function App() {
 //      <Display name={name} />
 //     </>
     <div>
-      <StarRating />
+      {/* <StarRating /> */}
       {/* <SearchItemsFromApi /> */}
       {/* <SearchItems /> */}
       {/* <ProductApp /> */}
       {/* <UseMemoExample /> */}
       {/* <UseCallbackExample /> */}
+      <CountryState />  
     </div>
   )
 }
